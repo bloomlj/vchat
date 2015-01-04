@@ -1,0 +1,13 @@
+{
+  "name": "vchat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+      "connect":"*",
+      "qs":"*",
+      "wechat": "*"
+  },
+  "author": "",
+  "license": "MIT"
+}
