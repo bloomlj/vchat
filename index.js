@@ -1,46 +1,81 @@
-var connect = require('connect');
-var http = require('http');
-var wechat = require('wechat');
-var qs = require('qs');
+var mp = require('wechat-mp')("vchat")
+var app = require('express')()
 
-var app = connect();
-app.use(qs.parse()); // Or app.use(express.query());
-app.use('/wechat', wechat('vchat', function (req, res, next) {
-  // 微信输入信息都在req.weixin上
-  var message = req.weixin;
-  if (message.FromUserName === 'diaosi') {
-    // 回复屌丝(普通回复)
-    res.reply('hehe');
-  } else if (message.FromUserName === 'text') {
-    //你也可以这样回复text类型的信息
-    res.reply({
-      content: 'text object',
-      type: 'text'
-    });
-  } else if (message.FromUserName === 'hehe') {
-    // 回复一段音乐
-    res.reply({
-      type: "music",
-      content: {
-        title: "来段音乐吧",
-        description: "一无所有",
-        musicUrl: "http://mp3.com/xx.mp3",
-        hqMusicUrl: "http://mp3.com/xx.mp3",
-        thumbMediaId: "thisThumbMediaId"
-      }
-    });
-  } else {
-    // 回复高富帅(图文回复)
-    res.reply([
-      {
-        title: '你来我家接我吧',
-        description: '这是女神与高富帅之间的对话',
-        picurl: 'http://nodeapi.cloudfoundry.com/qrcode.jpg',
-        url: 'http://nodeapi.cloudfoundry.com/'
-      }
-    ]);
+//mysql
+var knex = require('knex')({
+  client: 'mysql',
+  connection: {
+    host     : '127.0.0.1',
+    user     : 'root',
+    password : 'password',
+    database : 'vchat'
   }
-}));
+});
 
-//create node.js http server and listen on port
-http.createServer(app).listen(1234)
+app.get('/',function(req,res){
+    res.send("hahahhaha");
+});
+
+app.use('/wechat', mp.start())
+
+app.post('/wechat', function(req, res, next) {
+   //console.log(req);
+
+ console.log(req.body)
+ 
+ //msg define
+ var msgNews = {
+  msgType: 'news',
+  content: [{
+    title: '打分规则',
+    url: 'http://...',
+    picUrl: 'http://...'
+  }, {
+    title: 'news 2',
+    url: 'http://...',
+    picUrl: 'http://...'
+  }]
+}
+ 
+ var msgDf = {
+        msgType: 'text',
+        content: '您好！欢迎进入打分模式。\n请按照使用说明输入打分单位和分值。\n指令：#id,index1,index2,index3。\nid：单位编号index1：指标一、工作完成情况 index2：指标二、内部管理 index3：指标三、领导班子状况'
+      };
+ var msgDefault = {
+    msgType: 'text',
+    content: '您发的指令我不认识。'
+  };
+  var msgError = {
+    msgType: 'text',
+    content: '对不起，本系统不接受文本以外的其它信息。'
+  };
+
+  var msgSuccessCmd = {
+    msgType: 'text',
+    content: '命令执行完毕，评分成功。'
+  };
+//logic
+ if(req.body.raw.MsgType == 'text'){
+     if(req.body.raw.Content.toLowerCase() == 'df') res.body = msgDf;
+     else
+        if(req.body.raw.Content.toLowerCase().indexOf('a') == 0) res.body = msgSuccessCmd;
+        else res.body = msgDefault;
+ }else{
+     res.body = msgError; 
+ }
+
+
+  //or rich media message
+//  res.body = {
+//    msgType: 'music',
+//    content: {
+//      title: 'A beautiful song',
+//      musicUrl: 'http://.....'
+//    },
+//  }
+  next()
+}, mp.end())
+
+app.listen(1234,function(){
+    console.log("running at 1234.");
+});

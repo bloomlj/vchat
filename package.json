@@ -4,9 +4,12 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+      "express":"*",
       "connect":"*",
       "qs":"*",
-      "wechat": "*"
+      "wechat": "*",
+      "wechat-mp":"*",
+      "knex":"*"
   },
   "author": "",
   "license": "MIT"
