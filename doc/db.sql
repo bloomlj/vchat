@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS `msg` (
   `sp` varchar(50) DEFAULT '0',
   `uid` varchar(50) DEFAULT '0',
   `type` varchar(20) DEFAULT '0',
+  `MsgId` varchar(50) DEFAULT '0',
   `content` varchar(500) DEFAULT '0',
   `created` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -45,7 +46,7 @@ CREATE TABLE IF NOT EXISTS `score` (
   `org_id` int(10) DEFAULT NULL,
   `uid` varchar(50) DEFAULT NULL,
   `score` float DEFAULT NULL,
-  `msg_id` int(11) DEFAULT NULL
+  `msg_id` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Data exporting was unselected.

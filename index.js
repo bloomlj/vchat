@@ -59,13 +59,33 @@ app.post('/wechat', function(req, res, next) {
      if(req.body.raw.Content.toLowerCase() == 'df') res.body = msgDf;
      else
         if(req.body.raw.Content.toLowerCase().indexOf('a') == 0){
-                 knex('sensor_data')
-                 .insert([{sensor_id:'1',data: event.data,createdtime:nowstring}])
+            var msg_full = req.body.raw.Content.toLowerCase();
+            var temparray = msg_full.split(' ');
+            var orgid = temparray[0].substring(1);
+            var scorestring = temparray[1].replace(" ","");
+            var total = 0;
+            scorestring
+            if(scorestring.indexOf('s') == 0){
+                console.log("1111111111");
+                console.log(scorestring.substring(1));
+                total = parseFloat(scorestring.substring(1));
+            }else{
+                var scorearray = scorestring.split(",");
+                for (x in scorearray)
+                  {
+                    total=total + parseFloat(scorearray[x]);
+                  }
+            }
+            console.log(total);
+            
+            console.log(orgid);
+                 knex('score')
+                 .insert([{org_id:orgid,uid:req.body.raw.FromUserName,score:total,msg_id:req.body.raw.MsgId}])
                  .then(function(ret){
-                    console.log(ret);
                     console.log("db save success")
+                    res.body = msgSuccessCmd; 
                  });
-                res.body = msgSuccessCmd;
+              
         } 
         else res.body = msgDefault;
  }else{

@@ -9,7 +9,8 @@
       "qs":"*",
       "wechat": "*",
       "wechat-mp":"*",
-      "knex":"*"
+      "knex":"*",
+      "mysql":"*"
   },
   "author": "",
   "license": "MIT"
