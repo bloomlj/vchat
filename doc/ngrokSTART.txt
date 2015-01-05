@@ -1,0 +1,1 @@
+./ngrok.exe -authtoken NToWTwNuEzy6Uywqe/Aa  -subdomain=vchat 1234

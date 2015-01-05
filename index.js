@@ -58,7 +58,15 @@ app.post('/wechat', function(req, res, next) {
  if(req.body.raw.MsgType == 'text'){
      if(req.body.raw.Content.toLowerCase() == 'df') res.body = msgDf;
      else
-        if(req.body.raw.Content.toLowerCase().indexOf('a') == 0) res.body = msgSuccessCmd;
+        if(req.body.raw.Content.toLowerCase().indexOf('a') == 0){
+                 knex('sensor_data')
+                 .insert([{sensor_id:'1',data: event.data,createdtime:nowstring}])
+                 .then(function(ret){
+                    console.log(ret);
+                    console.log("db save success")
+                 });
+                res.body = msgSuccessCmd;
+        } 
         else res.body = msgDefault;
  }else{
      res.body = msgError; 
