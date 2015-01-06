@@ -20,11 +20,17 @@ app.use('/wechat', mp.start())
 
 app.post('/wechat', function(req, res, next) {
    //console.log(req);
-
+ //log message
+ knex('msg')
+ .insert([req.body.raw])
+ .then(function(ret){
+    console.log("msg log success")
+ });
+    
  console.log(req.body)
  
  //msg define
- var msgNews = {
+ var msgNews = { 
   msgType: 'news',
   content: [{
     title: '打分规则',
@@ -60,11 +66,15 @@ app.post('/wechat', function(req, res, next) {
      else
         if(req.body.raw.Content.toLowerCase().indexOf('a') == 0){
             var msg_full = req.body.raw.Content.toLowerCase();
-            var temparray = msg_full.split(' ');
-            var orgid = temparray[0].substring(1);
-            var scorestring = temparray[1].replace(" ","");
+            var orgstring = msg_full.substring(0,msg_full.indexOf(' '));
+            var orgid = orgstring.substring(1);
+            
+            var scorestring = msg_full.substring(msg_full.lastIndexOf(' ')+1);
+            
             var total = 0;
-            scorestring
+            console.log(msg_full);
+            console.log("["+orgstring+"]");
+             console.log("["+scorestring+"]");
             if(scorestring.indexOf('s') == 0){
                 console.log("1111111111");
                 console.log(scorestring.substring(1));
@@ -83,11 +93,14 @@ app.post('/wechat', function(req, res, next) {
                  .insert([{org_id:orgid,uid:req.body.raw.FromUserName,score:total,msg_id:req.body.raw.MsgId}])
                  .then(function(ret){
                     console.log("db save success")
-                    res.body = msgSuccessCmd; 
+                    
                  });
-              
+            res.body = msgSuccessCmd; 
         } 
-        else res.body = msgDefault;
+        else
+            if()
+            
+            res.body = msgDefault;
  }else{
      res.body = msgError; 
  }
