@@ -1,0 +1,17 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+table.light{
+border-collapse:collapse;
+margin:0 auto;
+width:100%;
+}
+table.light td{
+    border: #666 solid 1px;
+    padding:5px;
+}
+</style>
+<table class="light">
+    {{#data}}
+    <tr><td>{{name}}</td><td>{{score}}</td></tr>
+    {{/data}}
+</table>

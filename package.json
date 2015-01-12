@@ -7,10 +7,10 @@
       "express":"*",
       "connect":"*",
       "qs":"*",
-      "wechat": "*",
       "wechat-mp":"*",
       "knex":"*",
-      "mysql":"*"
+      "mysql":"*",
+      "hbs":"*"
   },
   "author": "",
   "license": "MIT"
