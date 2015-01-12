@@ -10,7 +10,8 @@
       "wechat-mp":"*",
       "knex":"*",
       "mysql":"*",
-      "hbs":"*"
+      "hbs":"*",
+      "needle":"*"
   },
   "author": "",
   "license": "MIT"

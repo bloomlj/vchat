@@ -1,6 +1,7 @@
 var mp = require('wechat-mp')("vchat");
 var express = require('express');
 var hbs = require('hbs');
+var needle = require('needle');
 var app = express();
 
 app.set('view engine', 'hbs');
@@ -16,11 +17,54 @@ var knex = require('knex')({
   }
 });
 
+
+var menudata =  {
+     "button":[
+     {	
+          "type":"click",
+          "name":"今日歌曲",
+          "key":"V1001_TODAY_MUSIC"
+      },
+      {
+           "name":"菜单",
+           "sub_button":[
+           {	
+               "type":"view",
+               "name":"搜索",
+               "url":"http://www.soso.com/"
+            },
+            {
+               "type":"view",
+               "name":"视频",
+               "url":"http://v.qq.com/"
+            },
+            {
+               "type":"click",
+               "name":"赞一下我们",
+               "key":"V1001_GOOD"
+            }]
+       }]
+ };
+
+
 app.use('/static', express.static(__dirname + '/public'));
 
 app.get('/',function(req,res){
     res.send("hahahhaha");
 });
+
+app.get('menu',function(req,res){
+    needle
+  .post('https://api.weixin.qq.com/cgi-bin/menu/create?access_token=vchat', data, { multipart: true })
+  .on('readable', function() { /* eat your chunks */ })
+  .on('end', function() {
+    console.log('Ready-o, friend-o.');
+    res.send("hahahhaha,ok,ok");
+  })  
+    
+    
+});
+
 
 app.get('/report/all',function(req,res){
     
