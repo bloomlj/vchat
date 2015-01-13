@@ -20,28 +20,23 @@ var knex = require('knex')({
 
 var menudata =  {
      "button":[
-     {	
-          "type":"click",
-          "name":"今日歌曲",
-          "key":"V1001_TODAY_MUSIC"
-      },
       {
-           "name":"菜单",
+           "name":"机关考核",
            "sub_button":[
            {	
                "type":"view",
-               "name":"搜索",
+               "name":"党群部门",
                "url":"http://www.soso.com/"
             },
             {
                "type":"view",
-               "name":"视频",
+               "name":"行政部门",
                "url":"http://v.qq.com/"
             },
             {
-               "type":"click",
-               "name":"赞一下我们",
-               "key":"V1001_GOOD"
+               "type":"view",
+               "name":"业务直属",
+               "url":"http://v.qq.com/"
             }]
        }]
  };
@@ -53,14 +48,17 @@ app.get('/',function(req,res){
     res.send("hahahhaha");
 });
 
-app.get('menu',function(req,res){
-    needle
-  .post('https://api.weixin.qq.com/cgi-bin/menu/create?access_token=vchat', data, { multipart: true })
-  .on('readable', function() { /* eat your chunks */ })
-  .on('end', function() {
-    console.log('Ready-o, friend-o.');
-    res.send("hahahhaha,ok,ok");
-  })  
+app.get('/menu',function(req,res){
+   console.log("sent menu");
+    var options = {
+      headers: { multipart: true }
+    }
+
+    needle.post('https://api.weixin.qq.com/cgi-bin/menu/create?access_token=vchat', menudata, options, function(err, resp) {
+      // you can pass params as a string or as an object.
+        console.log(resp);
+    });
+
     
     
 });
@@ -70,11 +68,6 @@ app.get('/report/all',function(req,res){
     
         knex.raw('select  org.name,sum(score) as totalscore  from score left join org on score.org_id = org.id group by org_id order by totalscore desc').then(function(resp) {
 
-//            var reportstring = "";
-//            for(i in resp[0]){
-//                reportstring = reportstring+resp[0][i].name+":"+resp[0][i].totalscore+"<br/>";
-//            }
-            //res.send(reportstring);
             res.render('report', {'data':resp[0]});
             
         });
@@ -85,12 +78,6 @@ app.get('/report/all',function(req,res){
 
 app.get('/report/me',function(req,res){
             knex.raw("select org.name,score from score left join org on org.id = score.org_id where  uid = 'oMR8gsycPJgCn2PH0RVAvlPd3oCc'  order by score desc ").then(function(resp) {
-
-//            var reportstring = "";
-//            for(i in resp[0]){
-//                reportstring = reportstring+resp[0][i].name+":"+resp[0][i].score+"<br/>";
-//            }
-//            res.send(reportstring);
             res.render('reportme', {'data':resp[0]});
         });
 });
@@ -98,28 +85,6 @@ app.get('/report/me',function(req,res){
 app.use('/wechat', mp.start())
 
 app.post('/wechat', function(req, res, next) {
-   //console.log(req);
- //log message
- knex('msg')
- .insert([req.body.raw])
- .then(function(ret){
-    console.log("msg log success")
- });
-    
- 
-// //msg define
-// var msgNews = { 
-//  msgType: 'news',
-//  content: [{
-//    title: '打分规则',
-//    url: 'http://...',
-//    picUrl: 'http://...'
-//  }, {
-//    title: 'news 2',
-//    url: 'http://...',
-//    picUrl: 'http://...'
-//  }]
-//}
  
  var msgDf = {
         msgType: 'text',
@@ -135,14 +100,27 @@ app.post('/wechat', function(req, res, next) {
   };
   var msgError = {
     msgType: 'text',
-    content: '对不起，本系统不接受文本以外的其它信息。'
+    content: '对不起，您发送的指令已超出我们的服务范围，请核对指令。'
   };
 
+  var msgOtherEvent = {
+    msgType: 'text',
+    content: '其它事件，咱无服务。'
+  };
+    
   var msgSuccessCmd = {
     msgType: 'text',
     content: '命令执行完毕，评分成功。'
   };
 
+  var msgSubscribeEvent = {
+      msgType: 'news',
+      content: [{
+        title: '全部评分结果报告',
+        url: 'http://vchat.ngrok.com/report/all',
+        picUrl: 'http://vchat.ngrok.com/static/report.png'
+      }]
+  };
     
  var msgReportAll = { 
   msgType: 'news',
@@ -164,6 +142,12 @@ app.post('/wechat', function(req, res, next) {
     
 //logic
  if(req.body.raw.MsgType == 'text'){
+      knex('msg')
+     .insert([req.body.raw])
+     .then(function(ret){
+        console.log("msg log success")
+     });
+     
      //打分提示
      if(req.body.raw.Content.toLowerCase() == 'df') res.body = msgDf;
      //绑定code
@@ -235,39 +219,25 @@ app.post('/wechat', function(req, res, next) {
        //全部报表
         else if(req.body.raw.Content.toLowerCase().indexOf('report_all') == 0){
                 res.body = msgReportAll; 
-//                knex.raw('select  org.name,sum(score) as totalscore  from score left join org on score.org_id = org.id group by org_id order by totalscore desc').then(function(resp) {
-//                     //console.log(res);
-//                    //res.body = "xx";
-//                        var reportstring = "";
-//                        for(i in resp[0]){
-//                           // console.log(resp[0][i]);
-//                            reportstring = reportstring+resp[0][i].name+":"+resp[0][i].totalscore+"\n";
-//                        }
-//                          var reportmsg = {
-//                            msgType: 'text',
-//                            content: reportstring
-//                          };
-//                        res.body = reportmsg;
-//                    });                
+           
             }
         //个人报表
         else if(req.body.raw.Content.toLowerCase().indexOf('report_me') == 0){
                 res.body = msgReportMe; 
             
             } else res.body = msgDefault;
- }else{
+ }else if(req.body.raw.MsgType == 'event'){
+    if(req.body.raw.Event == 'subscribe'){
+        res.body = msgSubscribeEvent; 
+    }else{
+        res.body = msgOtherEvent; 
+    }
+ }
+  else{
      res.body = msgError; 
  }
 
 
-  //or rich media message
-//  res.body = {
-//    msgType: 'music',
-//    content: {
-//      title: 'A beautiful song',
-//      musicUrl: 'http://.....'
-//    },
-//  }
   next()
 }, mp.end())
 
