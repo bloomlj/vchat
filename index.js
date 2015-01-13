@@ -17,53 +17,123 @@ var knex = require('knex')({
   }
 });
 
+var reportConfig = {'report_all':
+                    {'title':'全部评分报告',
+                     'orgtype':'全部'
+                    },
+                    'report_me':                   
+                    {'title':'我的评分报告',
+                     'orgtype':'全部'
+                    },
+                    'report_dq':                    
+                    {'title':'党群部门得分',
+                     'orgtype':'党群部门'
+                    },
+                    'report_xz':                    
+                    {'title':'行政部门得分',
+                     'orgtype':'行政部门'
+                    },
+                    'report_yw':                 
+                    {'title':'业务直属部门得分',
+                     'orgtype':'业务直属'
+                    },
+                    'report_dq_desc':
+                    {'title':'党群部门得分排序',
+                     'orgtype':'党群部门'
+                    },
+                    'report_xz_desc':
+                    {'title':'行政部门得分排序',
+                     'orgtype':'行政部门'
+                    },
+                    'report_yw_desc': 
+                    {'title':'业务直属得分排序',
+                     'orgtype':'业务直属'
+                    }
+                   };
 
 var menudata =  {
-     "button":[
-      {
-           "name":"机关考核",
-           "sub_button":[
-           {	
-               "type":"view",
-               "name":"党群部门",
-               "url":"http://www.soso.com/"
-            },
-            {
-               "type":"view",
-               "name":"行政部门",
-               "url":"http://v.qq.com/"
-            },
-            {
-               "type":"view",
-               "name":"业务直属",
-               "url":"http://v.qq.com/"
-            }]
-       }]
- };
+    "button": [
+        {
+            "name": "机关考核", 
+            "sub_button": [
+                {
+                    "type": "click", 
+                    "name": "党群部门", 
+                    "key": "report_dq"
+                }, 
+                {
+                    "type": "click", 
+                    "name": "行政部门", 
+                    "key": "report_xz"
+                }, 
+                {
+                    "type": "click", 
+                    "name": "业务直属", 
+                    "key": "report_yw"
+                }
+            ]
+        }, 
+        {
+            "name": "得分排序", 
+            "sub_button": [
+                {
+                    "type": "click", 
+                    "name": "党群部门", 
+                    "key": "report_dq_desc"
+                }, 
+                {
+                    "type": "click", 
+                    "name": "行政部门", 
+                    "key": "report_xz_desc"
+                }, 
+                {
+                    "type": "click", 
+                    "name": "业务直属", 
+                    "key": "report_yw_desc"
+                }
+            ]
+        }, 
+        {
+            "type": "click", 
+            "name": "登录", 
+            "key": "loginbd"
+        }
+    ]
+};
 
 
 app.use('/static', express.static(__dirname + '/public'));
 
 app.get('/',function(req,res){
-    res.send("hahahhaha");
+    res.send("ooooooo~~~~~ooooooooooo~~~~~~~~~oooooooooooo");
 });
 
+//create  menu
 app.get('/menu',function(req,res){
    console.log("sent menu");
     var options = {
       headers: { multipart: true }
     }
+    needle.get('https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wxcaabe980b29fc96d&secret=7c4b55dfd00aae4985e121cd27cc4beb', function(error, response) {
+  if (!error && response.statusCode == 200)
+    console.log(response.body.access_token);
+    var token = response.body.access_token;
+        
+        needle.post('https://api.weixin.qq.com/cgi-bin/menu/create?access_token='+token, menudata, options, function(error, response) {
+          // you can pass params as a string or as an object.
+            if (!error && response.statusCode == 200){
+                 console.log(menudata);
+                 console.log(response.body);
+            }
+           
+        });
 
-    needle.post('https://api.weixin.qq.com/cgi-bin/menu/create?access_token=vchat', menudata, options, function(err, resp) {
-      // you can pass params as a string or as an object.
-        console.log(resp);
     });
 
     
-    
 });
 
-
+//report
 app.get('/report/all',function(req,res){
     
         knex.raw('select  org.name,sum(score) as totalscore  from score left join org on score.org_id = org.id group by org_id order by totalscore desc').then(function(resp) {
@@ -71,9 +141,6 @@ app.get('/report/all',function(req,res){
             res.render('report', {'data':resp[0]});
             
         });
-    
-    
-    
 });
 
 app.get('/report/me',function(req,res){
@@ -81,6 +148,19 @@ app.get('/report/me',function(req,res){
             res.render('reportme', {'data':resp[0]});
         });
 });
+
+app.get('/report/:code',function(req,res){
+        var reportTitle = req.params.code.split(':')[0];
+        var uid = req.params.code.split(':')[1];
+        var orgtype = reportConfig[reportTitle].orgtype;
+        var ordertype = 'asc';
+        if(reportTitle.indexOf('desc') != -1) ordertype = 'desc';
+    
+        knex.raw("select org.name,score from score left join org on org.id = score.org_id where  uid = ? and org.type = ? order by score  " +ordertype,[uid,orgtype]).then(function(resp) {
+            res.render('reportme', {'data':resp[0]});
+        });
+});
+
 
 app.use('/wechat', mp.start())
 
@@ -216,20 +296,42 @@ app.post('/wechat', function(req, res, next) {
 
             res.body = msgSuccessCmd; 
         } 
-       //全部报表
-        else if(req.body.raw.Content.toLowerCase().indexOf('report_all') == 0){
-                res.body = msgReportAll; 
+       //报表
+        else if(req.body.raw.Content.toLowerCase().indexOf('report') == 0){
+
+                               
+            res.body = {msgType: 'news',
+                          content: [{
+                            title: reportConfig[req.body.raw.Content.toLowerCase()],
+                            url: 'http://vchat.ngrok.com/report/'+req.body.raw.Content.toLowerCase()+':'+req.body.raw.FromUserName,
+                            picUrl: 'http://vchat.ngrok.com/static/report.png'
+                          }]
+                        }; 
            
-            }
-        //个人报表
-        else if(req.body.raw.Content.toLowerCase().indexOf('report_me') == 0){
-                res.body = msgReportMe; 
-            
             } else res.body = msgDefault;
  }else if(req.body.raw.MsgType == 'event'){
     if(req.body.raw.Event == 'subscribe'){
         res.body = msgSubscribeEvent; 
-    }else{
+    } else if(req.body.raw.Event == 'CLICK'){
+        
+        if(req.body.raw.EventKey.indexOf('report') == 0){
+                               
+            res.body = {msgType: 'news',
+                          content: [{
+                            title: reportConfig[req.body.raw.EventKey].title,
+                            url: 'http://vchat.ngrok.com/report/'+req.body.raw.EventKey+':'+req.body.raw.FromUserName,
+                            picUrl: 'http://vchat.ngrok.com/static/report1.png'
+                          }]
+                        }; 
+           
+            }else if(req.body.raw.EventKey == 'loginbd'){
+                res.body = msgDf;
+            }else{
+                res.body = msgOtherEvent; 
+            }
+        
+    } else
+    {
         res.body = msgOtherEvent; 
     }
  }
